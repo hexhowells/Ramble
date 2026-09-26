@@ -1,63 +1,3 @@
-"""
-TW ## ## DL ## ## ## TW ## ## ## DL ## ## TW
-## DW ## ## ## TL ## ## ## TL ## ## ## DW ##
-## ## DW ## ## ## DL ## DL ## ## ## DW ## ##
-DL ## ## DW ## ## ## DL ## ## ## DW ## ## DL
-## ## ## ## DW ## ## ## ## ## DW ## ## ## ##
-## TL ## ## ## TL ## ## ## TL ## ## ## TL ##
-## ## DL ## ## ## DL ## DL ## ## ## DL ## ##
-TW ## ## DL ## ## ## ** ## ## ## DL ## ## TW
-## ## DL ## ## ## DL ## DL ## ## ## DL ## ##
-## TL ## ## ## TL ## ## ## TL ## ## ## TL ##
-## ## ## ## DW ## ## ## ## ## DW ## ## ## ##
-DL ## ## DW ## ## ## DL ## ## ## DW ## ## DL
-## ## DW ## ## ## DL ## DL ## ## ## DW ## ##
-## DW ## ## ## TL ## ## ## TL ## ## ## DW ##
-TW ## ## DL ## ## ## TW ## ## ## DL ## ## TW
-"""
-# ** = DW
-
-"""
-T # # d # # # T # # # d # # T
-# D # # # t # # # t # # # D #
-# # D # # # d # d # # # D # #
-d # # D # # # d # # # D # # d
-# # # # D # # # # # D # # # #
-# t # # # t # # # t # # # t #
-# # d # # # d # d # # # d # #
-T # # d # # # * # # # d # # T
-# # d # # # d # d # # # d # #
-# t # # # t # # # t # # # t #
-# # # # D # # # # # D # # # #
-d # # D # # # d # # # D # # d
-# # D # # # d # d # # # D # #
-# D # # # t # # # t # # # D #
-T # # d # # # T # # # d # # T
-
-* = DW
-d = DL
-t = TL
-D = DW
-T = TW
-"""
-
-"""
-bag = 
-A A A A A A A A A 
-B B C C D D D D 
-E E E E E E E E E E E E 
-F F G G G H H 
-I I I I I I I I I 
-J K L L L L M M 
-N N N N N N 
-O O O O O O O O 
-P P Q R R R R R R 
-S S S S T T T T T T 
-U U U U V V W W 
-X Y Y Z 
-[Blank] [Blank]
-"""
-
 from collections import Counter
 import random
 
@@ -99,7 +39,7 @@ class Scrabble:
             ['#','#','#','#','D','#','#','#','#','#','D','#','#','#','#'],
             ['#','t','#','#','#','t','#','#','#','t','#','#','#','t','#'],
             ['#','#','d','#','#','#','d','#','d','#','#','#','d','#','#'],
-            ['T','#','#','d','#','#','#','*','#','#','#','d','#','#','T'],
+            ['T','#','#','d','#','#','#','#','#','#','#','d','#','#','T'],
             ['#','#','d','#','#','#','d','#','d','#','#','#','d','#','#'],
             ['#','t','#','#','#','t','#','#','#','t','#','#','#','t','#'],
             ['#','#','#','#','D','#','#','#','#','#','D','#','#','#','#'],
@@ -108,6 +48,7 @@ class Scrabble:
             ['#','D','#','#','#','t','#','#','#','t','#','#','#','D','#'],
             ['T','#','#','d','#','#','#','T','#','#','#','d','#','#','T'],
         ]
+        self.first_turn = True
         self.player1 = player1
         self.player2 = player2
         self.bag = Counter({
@@ -125,6 +66,7 @@ class Scrabble:
 
 
     def state(self) -> None:
+        print('-'*100)
         print(self)
         print(f'\n(Player 1) - Score: {self.player1.score} - Rack: {self.player1.rack_tiles}')
         print(f'(Player 2) - Score: {self.player2.score} - Rack: {self.player2.rack_tiles}')
@@ -163,18 +105,49 @@ class Scrabble:
             self.bag[tile] += 1
 
 
-    def play(self, player: Player, word: list[str]):
-        pass
+    def validate(self):
+        return True
 
+
+    def play(self, player: Player, moves: list[tuple[str, tuple]]):
+        if self.first_turn:
+            if (7, 7) not in [m[1] for m in moves]:
+                print("First turn needs to play through center square")
+                return
+        
+        for move in moves:
+            tile, coords = move
+            r, c = coords
+            if self.board[r][c] != '#':
+                print(f"Square ({r},{c}) already contains a tile")
+                return
+            self.board[r][c] = tile
+
+        if self.validate():
+            for move in moves:
+                tile, _ = move
+                player.rack[tile] -= 1
+
+            self.draw(player, len(moves))
+            
+            if self.first_turn:
+                self.first_turn = False
+        else:
+            for move in moves:
+                tile, coords = move
+                r, c = coords
+                self.board[r][c] = '#'
 
 
 if __name__ == "__main__":
     p1 = Player()
     p2 = Player()
-    scrabble = Scrabble(p1, p2)
+    board = Scrabble(p1, p2)
 
-    scrabble.state()
+    board.state()
 
-    scrabble.exchange(p1, p1.rack_tiles[:2])
+    t1, t2, t3 = p1.rack_tiles[:3]
+    moves = [(t1, (7,7)), (t2, (7,8)), (t3, (7,9))]
+    board.play(p1, moves)
 
-    scrabble.state()
+    board.state()
