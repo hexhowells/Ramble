@@ -183,15 +183,15 @@ class Scrabble:
             for t in line:
                 if t == '#':
                     if len(word) > 1:
-                        if word not in self.dictionary:
-                            print(f'{word} is invalid')
+                        if word.upper() not in self.dictionary:
+                            print(f'{word.upper()} is invalid')
                             return False
                     word = ""
                 else:
                     word += t
 
-            if len(word) > 1 and word not in self.dictionary:
-                print(f'{word} is invalid')
+            if len(word) > 1 and word.upper() not in self.dictionary:
+                print(f'{word.upper()} is invalid')
                 return False
 
         return True
@@ -240,7 +240,7 @@ class Scrabble:
             
             for r, c in word_coords:
                 tile = self.board[r][c]
-                letter_score = self.tile_scores[tile]
+                letter_score = self.tile_scores.get(tile, 0)
                 
                 if (r, c) in moves_coords and (r, c) in self.multipliers:
                     match self.multipliers[(r, c)]:
@@ -292,7 +292,8 @@ class Scrabble:
         if self.validate(moves):
             for move in moves:
                 tile, _ = move
-                player.rack[tile] -= 1
+                rack_tile = '[Blank]' if tile.islower() else tile 
+                player.rack[rack_tile] -= 1
 
             self.draw(player, len(moves))
             

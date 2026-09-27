@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 from collections import Counter
 from scrabble import Player, Scrabble, Multiplier
 
@@ -15,7 +15,6 @@ class ScrabbleUI(tk.Tk):
         'btn_clear': '#F44336'
     }
 
-    # Map the Enum directly to colors and labels
     BOARD_COLORS = {
         'default': '#DFD4C5',
         Multiplier.TRIPLE_WORD: '#E57373',
@@ -133,7 +132,15 @@ class ScrabbleUI(tk.Tk):
         if self.placed_mask[r][c] or any(m[1] == (r, c) for m in self.pending_moves):
             return
             
-        self.pending_moves.append((self.selected_tile, (r, c)))
+        tile_to_place = self.selected_tile
+        
+        if tile_to_place == '[Blank]':
+            letter = simpledialog.askstring("Blank Tile", "Enter letter for blank:")
+            if not letter or len(letter) != 1 or not letter.isalpha():
+                return
+            tile_to_place = letter.lower() 
+
+        self.pending_moves.append((tile_to_place, (r, c)))
         self.selected_tile = None
         self.refresh()
 
@@ -165,7 +172,7 @@ class ScrabbleUI(tk.Tk):
         self.refresh()
 
     def _get_display_rack(self):
-        pending_counts = Counter([m[0] for m in self.pending_moves])
+        pending_counts = Counter(['[Blank]' if m[0].islower() else m[0] for m in self.pending_moves])
         display_rack = []
         for tile, count in self.current_player.rack.items():
             net_count = count - pending_counts.get(tile, 0)
@@ -189,11 +196,13 @@ class ScrabbleUI(tk.Tk):
                 btn = self.board_buttons[r][c]
                 
                 if (r, c) in pending_map:
-                    btn.config(text=pending_map[(r, c)], bg=self.THEME['tile_pending'], fg='black')
+                    tile_char = pending_map[(r, c)]
+                    fg_color = '#FF6347' if tile_char.islower() else 'black' 
+                    btn.config(text=tile_char.upper(), bg=self.THEME['tile_pending'], fg=fg_color)
                 elif self.placed_mask[r][c]:
-                    btn.config(text=cell_val, bg=self.THEME['tile_placed'], fg='black')
+                    fg_color = '#FF6347' if cell_val.islower() else 'black'
+                    btn.config(text=cell_val.upper(), bg=self.THEME['tile_placed'], fg=fg_color)
                 else:
-                    # Look up multiplier state directly from the mapping
                     mult_type = self.game.multipliers.get((r, c))
                     bg_color = self.BOARD_COLORS.get(mult_type, self.BOARD_COLORS['default'])
                     
