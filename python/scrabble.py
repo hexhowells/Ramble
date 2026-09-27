@@ -146,13 +146,39 @@ class Scrabble:
             self.bag[tile] += 1
 
 
-    def validate(self):
-        """
-        check if first and last tile are on X or Y axis (if neither then diag = invalid)
-        step from first tile to last to ensure all tiles are present (no gaps, no tiles elsewhere)
-        check tiles touch at least one existing tile
-        check word is valid (can build the word from the previous step, O(1) dict lookup)
-        """
+    def is_connected(self, coords: list[tuple[int, int]]) -> bool:
+        coord_set = set(coords)
+        return any(
+            0 <= r + dr < 15 and 0 <= c + dc < 15 
+            and self.board[r + dr][c + dc] != '#' 
+            and (r + dr, c + dc) not in coord_set
+            for r, c in coords
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))
+        )
+
+    def validate(self, moves: list[tuple[str, tuple]]) -> bool:
+        coords = [coord for _, coord in moves]
+        
+        if not self.first_turn and not self.is_connected(coords):
+            print("Word is disconnected from other words")
+            return False
+
+        rows = {r for r, _ in coords}
+        cols = {c for _, c in coords}
+
+        if len(rows) > 1 and len(cols) > 1:
+            print("Tiles need to be on the same row or column")
+            return False
+
+        if len(rows) == 1:
+            r = rows.pop()
+            if any(self.board[r][c] == '#' for c in range(min(cols), max(cols) + 1)):
+                return False
+        else:
+            c = cols.pop()
+            if any(self.board[r][c] == '#' for r in range(min(rows), max(rows) + 1)):
+                return False
+
         return True
 
 
@@ -196,7 +222,7 @@ class Scrabble:
                 return False
             self.board[r][c] = tile
 
-        if self.validate():
+        if self.validate(moves):
             for move in moves:
                 tile, _ = move
                 player.rack[tile] -= 1
@@ -209,7 +235,8 @@ class Scrabble:
             self.update_score(player, moves)
             
             return True
-        
+
+        print("Move not found valid in validate()")
         for move in moves:
             tile, coords = move
             r, c = coords
