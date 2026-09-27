@@ -26,6 +26,13 @@ class Player:
         return list(self.rack.elements())
 
 
+def load_dictionary(dict_name: str) -> set:
+    with open(f'../data/{dict_name}.txt', 'r') as f:
+        data = f.read().splitlines()
+
+    return set(map(lambda x: x.upper(), data))
+
+
 class Scrabble:
     tile_scores = {
         'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4,
@@ -89,6 +96,7 @@ class Scrabble:
             ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
             ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
         ]
+        self.dictionary = load_dictionary('CSW2019')
         self.first_turn = True
         self.player1 = player1
         self.player2 = player2
@@ -156,6 +164,7 @@ class Scrabble:
             for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1))
         )
 
+
     def validate(self, moves: list[tuple[str, tuple]]) -> bool:
         coords = [coord for _, coord in moves]
         
@@ -182,6 +191,28 @@ class Scrabble:
         return True
 
 
+    def validate_words(self):
+        all_lines = self.board + list(zip(*self.board))
+        
+        for line in all_lines:
+            word = ""
+            for t in line:
+                if t == '#':
+                    if len(word) > 1:
+                        if word not in self.dictionary:
+                            print(f'{word} is invalid')
+                            return False
+                    word = ""
+                else:
+                    word += t
+
+            if len(word) > 1 and word not in self.dictionary:
+                print(f'{word} is invalid')
+                return False
+
+        return True
+            
+
     def update_score(self, player, moves):
         score = 0
         dw = 0
@@ -196,8 +227,10 @@ class Scrabble:
                     case Multiplier.TRIPLE_LETTER:
                         score += self.tile_scores[tile] * 3
                     case Multiplier.DOUBLE_WORD:
+                        score += self.tile_scores[tile]
                         dw += 1
                     case Multiplier.TRIPLE_WORD:
+                        score += self.tile_scores[tile]
                         tw += 1
             else:
                 score += self.tile_scores[tile]
@@ -206,6 +239,13 @@ class Scrabble:
         score = score * 3**tw
 
         player.score += score
+
+
+    def undo_moves(self, moves):
+        for move in moves:
+            tile, coords = move
+            r, c = coords
+            self.board[r][c] = '#'
 
 
     def play(self, player: Player, moves: list[tuple[str, tuple]]) -> bool:
@@ -222,6 +262,11 @@ class Scrabble:
                 return False
             self.board[r][c] = tile
 
+        if not self.validate_words():
+            print("word is not in the dictionary")
+            self.undo_moves(moves)
+            return False
+
         if self.validate(moves):
             for move in moves:
                 tile, _ = move
@@ -237,10 +282,8 @@ class Scrabble:
             return True
 
         print("Move not found valid in validate()")
-        for move in moves:
-            tile, coords = move
-            r, c = coords
-            self.board[r][c] = '#'
+        self.undo_moves(moves)
+        
         return False
 
 
