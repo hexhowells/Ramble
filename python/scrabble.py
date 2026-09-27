@@ -213,32 +213,70 @@ class Scrabble:
         return True
             
 
-    def update_score(self, player, moves):
-        score = 0
-        dw = 0
-        tw = 0
+    def update_score(self, player: Player, moves: list[tuple[str, tuple]]) -> None:
+        moves_coords = {coords for _, coords in moves}
+        words_formed = set()
 
-        for move in moves:
-            tile, coords = move
-            if coords in self.multipliers:
-                match self.multipliers[coords]:
-                    case Multiplier.DOUBLE_LETTER:
-                        score += self.tile_scores[tile] * 2
-                    case Multiplier.TRIPLE_LETTER:
-                        score += self.tile_scores[tile] * 3
-                    case Multiplier.DOUBLE_WORD:
-                        score += self.tile_scores[tile]
-                        dw += 1
-                    case Multiplier.TRIPLE_WORD:
-                        score += self.tile_scores[tile]
-                        tw += 1
-            else:
-                score += self.tile_scores[tile]
+        def get_word_coords(r: int, c: int, dr: int, dc: int) -> tuple[tuple[int, int], ...]:
+            """scans the board bidirectionally to find the full extent of a word"""
+            start_r, start_c = r, c
+            while 0 <= start_r - dr < 15 and 0 <= start_c - dc < 15 and self.board[start_r - dr][start_c - dc] != '#':
+                start_r -= dr
+                start_c -= dc
+            
+            end_r, end_c = r, c
+            while 0 <= end_r + dr < 15 and 0 <= end_c + dc < 15 and self.board[end_r + dr][end_c + dc] != '#':
+                end_r += dr
+                end_c += dc
+            
+            coords = []
+            curr_r, curr_c = start_r, start_c
+            while True:
+                coords.append((curr_r, curr_c))
+                if (curr_r, curr_c) == (end_r, end_c):
+                    break
+                curr_r += dr
+                curr_c += dc
+                
+            return tuple(coords)
 
-        score = score * 2**dw
-        score = score * 3**tw
+        for _, (r, c) in moves:
+            h_word = get_word_coords(r, c, 0, 1)
+            v_word = get_word_coords(r, c, 1, 0)
+            
+            if len(h_word) > 1:
+                words_formed.add(h_word)
+            if len(v_word) > 1:
+                words_formed.add(v_word)
 
-        player.score += score
+        total_score = 0
+        for word_coords in words_formed:
+            word_score = 0
+            word_mult = 1
+            
+            for r, c in word_coords:
+                tile = self.board[r][c]
+                letter_score = self.tile_scores[tile]
+                
+                if (r, c) in moves_coords and (r, c) in self.multipliers:
+                    match self.multipliers[(r, c)]:
+                        case Multiplier.DOUBLE_LETTER:
+                            letter_score *= 2
+                        case Multiplier.TRIPLE_LETTER:
+                            letter_score *= 3
+                        case Multiplier.DOUBLE_WORD:
+                            word_mult *= 2
+                        case Multiplier.TRIPLE_WORD:
+                            word_mult *= 3
+                            
+                word_score += letter_score
+                
+            total_score += word_score * word_mult
+
+        if len(moves) == 7:
+            total_score += 50
+
+        player.score += total_score
 
 
     def undo_moves(self, moves):
