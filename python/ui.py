@@ -12,7 +12,8 @@ class ScrabbleUI(tk.Tk):
         'tile_placed': '#E8C396',
         'tile_pending': '#FFF5A5',
         'btn_submit': '#4CAF50',
-        'btn_clear': '#F44336'
+        'btn_clear': '#F44336',
+        'btn_exchange': '#2196F3'
     }
 
     BOARD_COLORS = {
@@ -97,6 +98,10 @@ class ScrabbleUI(tk.Tk):
                   font=("Segoe UI", 11, "bold"), bg=self.THEME['btn_submit'], fg='white', 
                   relief=tk.FLAT, padx=15, pady=5).pack(side=tk.LEFT, padx=10)
         
+        tk.Button(self.control_frame, text="Exchange Tiles", command=self.open_exchange_dialog, 
+                  font=("Segoe UI", 11, "bold"), bg=self.THEME['btn_exchange'], fg='white', 
+                  relief=tk.FLAT, padx=15, pady=5).pack(side=tk.LEFT, padx=10)
+
         tk.Button(self.control_frame, text="Clear Pending", command=self.clear_pending, 
                   font=("Segoe UI", 11, "bold"), bg=self.THEME['btn_clear'], fg='white', 
                   relief=tk.FLAT, padx=15, pady=5).pack(side=tk.LEFT, padx=10)
@@ -170,6 +175,77 @@ class ScrabbleUI(tk.Tk):
         self.pending_moves.clear()
         self.selected_tile = None
         self.refresh()
+        
+    def open_exchange_dialog(self):
+        if sum(self.game.bag.values()) == 0:
+            messagebox.showwarning("Exchange Unavailable", "The bag is empty.")
+            return
+            
+        if self.pending_moves:
+            messagebox.showwarning("Clear Board", "You cannot exchange while you have pending tiles on the board. Click 'Clear Pending' first.")
+            return
+
+        self.selected_tile = None
+        self.refresh()
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Exchange Tiles")
+        dialog.geometry("420x220")
+        dialog.configure(bg=self.THEME['bg_panel'])
+        dialog.transient(self)
+        dialog.grab_set()
+
+        tk.Label(dialog, text="Select tiles to exchange:", font=("Segoe UI", 12, "bold"), 
+                 bg=self.THEME['bg_panel'], fg=self.THEME['fg_text']).pack(pady=15)
+
+        rack_frame = tk.Frame(dialog, bg=self.THEME['bg_panel'])
+        rack_frame.pack(pady=5)
+
+        tiles = self.current_player.rack_tiles
+        selected_indices = set()
+        buttons = []
+
+        def toggle(idx):
+            if idx in selected_indices:
+                selected_indices.remove(idx)
+                buttons[idx].config(bg=self.THEME['tile_placed'])
+            else:
+                selected_indices.add(idx)
+                buttons[idx].config(bg='#A5D6A7') # Selection highlight
+
+        for i, tile in enumerate(tiles):
+            btn = tk.Button(
+                rack_frame, width=3, height=1, font=("Segoe UI", 14, "bold"),
+                bg=self.THEME['tile_placed'], text=tile, relief=tk.RAISED,
+                command=lambda idx=i: toggle(idx)
+            )
+            btn.grid(row=0, column=i, padx=4)
+            buttons.append(btn)
+
+        def confirm():
+            if not selected_indices:
+                dialog.destroy()
+                return
+            
+            bag_count = sum(self.game.bag.values())
+            if len(selected_indices) > bag_count:
+                messagebox.showwarning("Limit Exceeded", f"You cannot exchange more tiles than are left in the bag ({bag_count}).")
+                return
+            
+            tiles_to_exchange = [tiles[i] for i in selected_indices]
+            self.game.exchange(self.current_player, tiles_to_exchange)
+            
+            # Ends turn automatically
+            self.current_player, self.current_player_name = (
+                (self.p2, "Player 2") if self.current_player == self.p1 else (self.p1, "Player 1")
+            )
+            
+            self.refresh()
+            dialog.destroy()
+
+        tk.Button(dialog, text="Confirm Exchange", command=confirm, 
+                  font=("Segoe UI", 11, "bold"), bg=self.THEME['btn_submit'], fg='white', 
+                  relief=tk.FLAT, padx=15, pady=5).pack(pady=15)
 
     def _get_display_rack(self):
         pending_counts = Counter(['[Blank]' if m[0].islower() else m[0] for m in self.pending_moves])
