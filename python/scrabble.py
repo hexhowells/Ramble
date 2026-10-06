@@ -99,6 +99,7 @@ class Scrabble:
 
 
     def state(self) -> None:
+        """Print the state of the board, rack, and bag onto the terminal"""
         print('-'*100)
         print(self)
         print(f'\n(Player 1) - Score: {self.player1.score} - Rack: {self.player1.rack_tiles}')
@@ -106,7 +107,14 @@ class Scrabble:
         print(f'\nBag: {self.bag}')
 
 
-    def draw(self, player: Player, n: int):
+    def draw(self, player: Player, n: int) -> None:
+        """
+        Draw tiles from the bag into a player's rack
+
+        Args:
+            player: the player to draw tiles to
+            n: the maximum number of tiles to draw from the bag
+        """
         tiles = list(self.bag.elements())
 
         assert player.rack.total() + n <= 7, f"Cannot draw {n} tiles, rack cannot have more than 7 tiles."
@@ -121,6 +129,13 @@ class Scrabble:
 
 
     def exchange(self, player: Player, tiles: list[str]) -> None:
+        """
+        Exchange N tiles from a player's rack from the bag
+
+        Args:
+            player: the player to exchange the tiles
+            tiles: the tiles on the player's rack to exchange
+        """
         if len(self.bag) == 0:
             return None
 
@@ -139,6 +154,15 @@ class Scrabble:
 
 
     def is_connected(self, coords: list[tuple[int, int]]) -> bool:
+        """
+        Checks if all the tiles in a new word are connected to the placed tiles
+
+        Args:
+            coords: coordinates of each newly placed tile
+
+        Returns:
+            true if all tiles are connected, false otherwise
+        """
         coord_set = set(coords)
         return any(
             0 <= r + dr < 15 and 0 <= c + dc < 15 
@@ -150,6 +174,15 @@ class Scrabble:
 
 
     def validate(self, moves: list[tuple[str, tuple]]) -> bool:
+        """
+        Validate a new word placed on the board
+
+        Args:
+            moves: list of tuples containing the tile letter and board coordinate
+
+        Returns:
+            true if the tiles are valid, false otherwise
+        """
         coords = [coord for _, coord in moves]
         
         if not self.first_turn and not self.is_connected(coords):
@@ -176,6 +209,7 @@ class Scrabble:
 
 
     def validate_words(self):
+        """Validate that the current state of the board contains all legal words"""
         all_lines = self.board + list(zip(*self.board))
         
         for line in all_lines:
@@ -198,6 +232,13 @@ class Scrabble:
             
 
     def update_score(self, player: Player, moves: list[tuple[str, tuple]]) -> None:
+        """
+        Calculates the score for a turn and update the players score value
+
+        Args:
+            player: the player that made the move
+            moves: list of tuples containing the tile letter and board coordinate
+        """
         moves_coords = {coords for _, coords in moves}
         words_formed = set()
 
@@ -264,6 +305,12 @@ class Scrabble:
 
 
     def undo_moves(self, moves):
+        """
+        Undo a list of moves from the board
+
+        Args:
+            moves: list of tuples containing the tile letter and board coordinate
+        """
         for move in moves:
             tile, coords = move
             r, c = coords
@@ -271,6 +318,16 @@ class Scrabble:
 
 
     def play(self, player: Player, moves: list[tuple[str, tuple]]) -> bool:
+        """
+        Play a word on the board by a player
+
+        Args:
+            player: the player making the new word
+            moves: list of tuples containing the tile letter and board coordinate
+
+        Returns:
+            True if the move was valid and played, False otherwise
+        """
         if self.first_turn:
             if (7, 7) not in [m[1] for m in moves]:
                 print("First turn needs to play through center square")
