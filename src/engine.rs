@@ -66,8 +66,8 @@ pub const TILE_SCORES: [u8; 27] = [
 
 pub struct Board {
     board: [u8; 225],
-    p1_score: u8,
-    p2_score: u8
+    p1_score: u16,
+    p2_score: u16
 }
 
 
