@@ -1,3 +1,8 @@
+mod engine;
+
+
 fn main() {
-    println!("Hello, world!");
+    let mut board = engine::Board::new();
+
+    board.state();
 }

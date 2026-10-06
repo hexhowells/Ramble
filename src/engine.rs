@@ -65,7 +65,25 @@ pub const TILE_SCORES: [u8; 27] = [
 ];
 
 pub struct Board {
-    board: [u8, 225],
+    board: [u8; 225],
     p1_score: u8,
     p2_score: u8
+}
+
+
+impl Board {
+    pub fn new() -> Self {
+        Self {
+            board: [0; 225],
+            p1_score: 0,
+            p2_score: 0
+        }
+    }
+
+
+    pub fn state(&self) {
+        for row in self.board.chunks(15) {
+            println!("{:?}", row);
+        }
+    }
 }
