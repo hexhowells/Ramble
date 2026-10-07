@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Multiplier {
     Normal,
@@ -67,7 +66,10 @@ pub const TILE_SCORES: [u8; 27] = [
 pub struct Board {
     board: [u8; 225],
     p1_score: u16,
-    p2_score: u16
+    p2_score: u16,
+    bag: [u8; 100],
+    p1_rack: [u8; 100],
+    p2_rack: [u8; 100]
 }
 
 
@@ -76,7 +78,10 @@ impl Board {
         Self {
             board: [0; 225],
             p1_score: 0,
-            p2_score: 0
+            p2_score: 0,
+            bag: [1; 100],
+            p1_rack: [0; 100],
+            p2_rack: [0; 100]
         }
     }
 
