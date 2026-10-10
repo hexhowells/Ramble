@@ -1,3 +1,9 @@
+use bitvec::prelude::*;
+use rand::seq::IndexedRandom;
+
+
+type BitField = BitArr!(for 100, in u64, Lsb0);
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Multiplier {
     Normal,
@@ -67,9 +73,8 @@ pub struct Board {
     board: [u8; 225],
     p1_score: u16,
     p2_score: u16,
-    bag: [u8; 100],
-    p1_rack: [u8; 100],
-    p2_rack: [u8; 100]
+    bag: BitField,
+    racks: [BitField; 2]
 }
 
 
@@ -79,9 +84,8 @@ impl Board {
             board: [0; 225],
             p1_score: 0,
             p2_score: 0,
-            bag: [1; 100],
-            p1_rack: [0; 100],
-            p2_rack: [0; 100]
+            bag: bitarr![u64, Lsb0; 1; 100],
+            racks: [bitarr![u64, Lsb0; 0; 100]; 2],
         }
     }
 
@@ -89,6 +93,25 @@ impl Board {
     pub fn state(&self) {
         for row in self.board.chunks(15) {
             println!("{:?}", row);
+        }
+        println!("bag {:?}", self.bag);
+        println!("p1 rack {:?}", self.racks[0]);
+        println!("p2 rack {:?}", self.racks[1]);
+    }
+
+
+    pub fn draw(&mut self, n: usize) {
+        let set_indices: Vec<usize> = self.bag.iter()
+            .enumerate()
+            .filter_map(|(idx, bit)| (*bit).then_some(idx))
+            .collect();
+
+        let move_count = n.min(set_indices.len());
+        let mut rng = rand::rng();
+
+        for &idx in set_indices.sample(&mut rng, move_count) {
+            self.bag.set(idx, false);
+            self.racks[0].set(idx, true);
         }
     }
 }
