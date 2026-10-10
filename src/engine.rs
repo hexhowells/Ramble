@@ -13,6 +13,7 @@ pub enum Multiplier {
     TripleWord,
 }
 
+
 const N: Multiplier = Multiplier::Normal;
 const DL: Multiplier = Multiplier::DoubleLetter;
 const TL: Multiplier = Multiplier::TripleLetter;
@@ -91,16 +92,17 @@ impl Board {
 
 
     pub fn state(&self) {
+        println!("\n--Board State--");
         for row in self.board.chunks(15) {
             println!("{:?}", row);
         }
-        println!("bag {:?}", self.bag);
-        println!("p1 rack {:?}", self.racks[0]);
-        println!("p2 rack {:?}", self.racks[1]);
+        println!("bag\t {:b}", self.bag);
+        println!("p1 rack\t {:b}", self.racks[0]);
+        println!("p2 rack\t {:b}", self.racks[1]);
     }
 
 
-    pub fn draw(&mut self, n: usize) {
+    pub fn draw(&mut self, n: usize, player: usize) {
         let set_indices: Vec<usize> = self.bag.iter()
             .enumerate()
             .filter_map(|(idx, bit)| (*bit).then_some(idx))
@@ -111,7 +113,7 @@ impl Board {
 
         for &idx in set_indices.sample(&mut rng, move_count) {
             self.bag.set(idx, false);
-            self.racks[0].set(idx, true);
+            self.racks[player].set(idx, true);
         }
     }
 }
