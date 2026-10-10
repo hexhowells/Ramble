@@ -75,7 +75,7 @@ pub struct Board {
     p1_score: u16,
     p2_score: u16,
     bag: BitField,
-    racks: [BitField; 2]
+    pub racks: [BitField; 2]
 }
 
 
@@ -93,9 +93,9 @@ impl Board {
 
     pub fn state(&self) {
         println!("\n--Board State--");
-        for row in self.board.chunks(15) {
-            println!("{:?}", row);
-        }
+        // for row in self.board.chunks(15) {
+        //     println!("{:?}", row);
+        // }
         println!("bag\t {:b}", self.bag);
         println!("p1 rack\t {:b}", self.racks[0]);
         println!("p2 rack\t {:b}", self.racks[1]);
@@ -114,6 +114,18 @@ impl Board {
         for &idx in set_indices.sample(&mut rng, move_count) {
             self.bag.set(idx, false);
             self.racks[player].set(idx, true);
+        }
+    }
+
+    pub fn exchange(&mut self, player: usize, exchange_tiles: BitField) -> Result<(), &'static str> {
+        if self.racks[player] & exchange_tiles == exchange_tiles {
+            self.draw(exchange_tiles.count_ones(), player);
+            self.racks[player] ^= exchange_tiles;
+            self.bag |= exchange_tiles;
+
+            Ok(())
+        } else {
+            Err("Invalid exchange mask")
         }
     }
 }
