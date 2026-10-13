@@ -20,6 +20,8 @@ const TL: Multiplier = Multiplier::TripleLetter;
 const DW: Multiplier = Multiplier::DoubleWord;
 const TW: Multiplier = Multiplier::TripleWord;
 
+const EMPTY: u8 = 27;
+
 
 pub const BOARD_MULTIPLIERS: [Multiplier; 225] = [
     TW, N,  N,  DL, N,  N,  N,  TW, N,  N,  N,  DL, N,  N,  TW,
@@ -113,7 +115,7 @@ pub struct Board {
 impl Board {
     pub fn new() -> Self {
         Self {
-            board: [0; 225],
+            board: [EMPTY; 225],
             p1_score: 0,
             p2_score: 0,
             bag: bitarr![u64, Lsb0; 1; 100],
