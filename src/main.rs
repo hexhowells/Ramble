@@ -20,7 +20,7 @@ fn main() {
 
     println!("mask: \t {:b}", mask);
 
-    board.exchange(0, mask);
+    let _ = board.exchange(0, mask);
 
     board.state();
 }
