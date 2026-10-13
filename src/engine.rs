@@ -93,9 +93,9 @@ impl Board {
 
     pub fn state(&self) {
         println!("\n--Board State--");
-        // for row in self.board.chunks(15) {
-        //     println!("{:?}", row);
-        // }
+        for row in self.board.chunks(15) {
+            println!("{:?}", row);
+        }
         println!("bag\t {:b}", self.bag);
         println!("p1 rack\t {:b}", self.racks[0]);
         println!("p2 rack\t {:b}", self.racks[1]);
@@ -116,6 +116,7 @@ impl Board {
             self.racks[player].set(idx, true);
         }
     }
+
 
     pub fn exchange(&mut self, player: usize, exchange_tiles: BitField) -> Result<(), &'static str> {
         if self.racks[player] & exchange_tiles == exchange_tiles {
