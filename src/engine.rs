@@ -108,7 +108,8 @@ pub struct Board {
     p1_score: u16,
     p2_score: u16,
     bag: BitField,
-    pub racks: [BitField; 2]
+    pub racks: [BitField; 2],
+    first_turn: bool
 }
 
 
@@ -120,6 +121,7 @@ impl Board {
             p2_score: 0,
             bag: bitarr![u64, Lsb0; 1; 100],
             racks: [bitarr![u64, Lsb0; 0; 100]; 2],
+            first_turn: true,
         }
     }
 
@@ -166,18 +168,56 @@ impl Board {
 
     pub fn play(&mut self, player: usize, play_tiles: BitField, pos_tiles: &[(usize, usize)]) -> Result<(), &'static str> {
         if self.racks[player] & play_tiles == play_tiles {
+            let board_copy = self.board;
+
             for &(tile_pos, tile_idx) in pos_tiles.iter() {
                 let tile_val = TILE_MAP[tile_idx];
-                //let board_copy = self.board;
                 self.board[tile_pos] = tile_val;
-                //let valid = validate();
-                // if valid == true {update rack, OK}
-                // else {unmake board, Err}
             }
-            self.racks[player] ^= play_tiles;
-            Ok(())
+
+            let valid = self.validate(pos_tiles);
+
+            if valid == true {
+                self.racks[player] ^= play_tiles;
+                if self.first_turn == true {
+                    self.first_turn = false;
+                }
+                Ok(())
+            }
+            else {
+                self.board = board_copy;
+                Err("Board validation failed")
+            }
         } else {
             Err("Invalid play mask")
         }
+    }
+
+    // ensure first move uses center tile
+    // ensure all placed tiles are on the same row/col
+    // ensure tiles are not free hanging (unless the first turn)
+    // ensure no gaps between placed tiles
+    // ensure all words on the board are valid
+    fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
+        if self.first_turn == true && self.board[112] == EMPTY {
+            return false;
+        }
+
+        if pos_tiles.is_empty() {
+            return false;
+        }
+
+        let first_pos = pos_tiles[0].0;
+        let target_row = first_pos / 15;
+        let target_col = first_pos % 15;
+
+        let same_row = pos_tiles.iter().all(|&(pos, _)| pos / 15 == target_row);
+        let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
+
+        if !same_row && !same_col {
+            return false;
+        }
+
+        true
     }
 }
