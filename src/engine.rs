@@ -193,9 +193,9 @@ impl Board {
         }
     }
 
-    // ensure first move uses center tile
-    // ensure all placed tiles are on the same row/col
-    // ensure tiles are not free hanging (unless the first turn)
+    // X ensure first move uses center tile
+    // X ensure all placed tiles are on the same row/col
+    // X ensure tiles are not free hanging (unless the first turn)
     // ensure no gaps between placed tiles
     // ensure all words on the board are valid
     fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
@@ -215,6 +215,17 @@ impl Board {
         let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
 
         if !same_row && !same_col {
+            return false;
+        }
+
+        let is_connected = pos_tiles.iter().any(|&(pos, _)| {
+            (tile_pos >= 15 && self.board[tile_pos-15] != EMPTY) ||
+            (tile_pos < 210 && self.board[tile_pos+15] != EMPTY) ||
+            (tile_pos % 15 != 0 && self.board[tile_pos-1] != EMPTY) ||
+            (tile_pos % 15 != 14 && self.board[tile_pos+1] != EMPTY)
+        });
+
+        if !self.first_turn && !is_connected {
             return false;
         }
 
