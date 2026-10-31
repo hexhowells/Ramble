@@ -196,7 +196,7 @@ impl Board {
     // X ensure first move uses center tile
     // X ensure all placed tiles are on the same row/col
     // X ensure tiles are not free hanging (unless the first turn)
-    // ensure no gaps between placed tiles
+    // X ensure no gaps between placed tiles
     // ensure all words on the board are valid
     fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
         if self.first_turn == true && self.board[112] == EMPTY {
@@ -216,6 +216,41 @@ impl Board {
 
         if !same_row && !same_col {
             return false;
+        }
+        
+        let mut word: Vec<u8> = Vec::new();
+        let mut start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
+        let mut end_pos = pos_tiles.iter().map(|&(p, _)| p).max().unwrap();
+        let step = if same_row {1} else {15};
+
+        if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
+            return false;
+        }
+
+        if same_row {
+            while start_pos % 15 != 0 && self.board[start_pos-1] != EMPTY {
+                start_pos -= 1;
+            }
+
+            loop {
+                word.push(self.board[start_pos]);
+                start_pos += 1;
+                if start_pos % 15 == 0 || self.board[start_pos] == EMPTY {
+                    break;
+                }
+            }
+        } else if same_col {
+            while start_pos > 14 && self.board[start_pos-15] != EMPTY {
+                start_pos -= 15;
+            }
+
+            loop {
+                word.push(self.board[start_pos]);
+                start_pos += 15;
+                if start_pos >= 225 || self.board[start_pos] == EMPTY {
+                    break;
+                }
+            }
         }
 
         let is_connected = pos_tiles.iter().any(|&(pos, _)| {
