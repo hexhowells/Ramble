@@ -14,6 +14,12 @@ pub enum Multiplier {
 }
 
 
+enum Direction {
+    Vertical,
+    Horizontal,
+}
+
+
 const N: Multiplier = Multiplier::Normal;
 const DL: Multiplier = Multiplier::DoubleLetter;
 const TL: Multiplier = Multiplier::TripleLetter;
@@ -193,11 +199,44 @@ impl Board {
         }
     }
 
-    // X ensure first move uses center tile
-    // X ensure all placed tiles are on the same row/col
-    // X ensure tiles are not free hanging (unless the first turn)
-    // X ensure no gaps between placed tiles
-    // ensure all words on the board are valid
+
+    fn scan_word(&self, mut tile_pos: usize, direc: Direction) -> Vec<u8> {
+        let mut word: Vec<u8> = Vec::new();
+        
+        match direc {
+            Direction::Horizontal => {
+                while tile_pos % 15 != 0 && self.board[tile_pos-1] != EMPTY {
+                    tile_pos -= 1;
+                }
+
+                loop {
+                    word.push(self.board[tile_pos]);
+                    tile_pos += 1;
+                    if tile_pos % 15 == 0 || self.board[tile_pos] == EMPTY {
+                        break;
+                    }
+                }
+            }
+
+            Direction::Vertical => {
+                while tile_pos > 14 && self.board[tile_pos-15] != EMPTY {
+                    tile_pos -= 15;
+                }
+
+                loop {
+                    word.push(self.board[tile_pos]);
+                    tile_pos += 15;
+                    if tile_pos >= 225 || self.board[tile_pos] == EMPTY {
+                        break;
+                    }
+                }
+            }
+        }
+
+        word
+    }
+
+
     fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
         if self.first_turn == true && self.board[112] == EMPTY {
             return false;
@@ -218,9 +257,10 @@ impl Board {
             return false;
         }
         
+        let mut words: Vec<Vec<u8>> = Vec::new();
         let mut word: Vec<u8> = Vec::new();
         let mut start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
-        let mut end_pos = pos_tiles.iter().map(|&(p, _)| p).max().unwrap();
+        let end_pos = pos_tiles.iter().map(|&(p, _)| p).max().unwrap();
         let step = if same_row {1} else {15};
 
         if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
@@ -234,6 +274,9 @@ impl Board {
 
             loop {
                 word.push(self.board[start_pos]);
+                if (start_pos >= 15 && self.board[start_pos-15] != EMPTY) || (start_pos < 210 && self.board[start_pos+15] != EMPTY) {
+                    words.push(self.scan_word(start_pos, Direction::Vertical));
+                }
                 start_pos += 1;
                 if start_pos % 15 == 0 || self.board[start_pos] == EMPTY {
                     break;
@@ -246,6 +289,9 @@ impl Board {
 
             loop {
                 word.push(self.board[start_pos]);
+                if (start_pos % 15 != 0 && self.board[start_pos-1] != EMPTY) || (start_pos % 15 != 14 && self.board[start_pos+1] != EMPTY) {
+                    words.push(self.scan_word(start_pos, Direction::Horizontal));
+                }
                 start_pos += 15;
                 if start_pos >= 225 || self.board[start_pos] == EMPTY {
                     break;
@@ -253,11 +299,13 @@ impl Board {
             }
         }
 
+        words.push(word);
+
         let is_connected = pos_tiles.iter().any(|&(pos, _)| {
-            (tile_pos >= 15 && self.board[tile_pos-15] != EMPTY) ||
-            (tile_pos < 210 && self.board[tile_pos+15] != EMPTY) ||
-            (tile_pos % 15 != 0 && self.board[tile_pos-1] != EMPTY) ||
-            (tile_pos % 15 != 14 && self.board[tile_pos+1] != EMPTY)
+            (pos >= 15 && self.board[pos-15] != EMPTY) ||
+            (pos < 210 && self.board[pos+15] != EMPTY) ||
+            (pos % 15 != 0 && self.board[pos-1] != EMPTY) ||
+            (pos % 15 != 14 && self.board[pos+1] != EMPTY)
         });
 
         if !self.first_turn && !is_connected {
