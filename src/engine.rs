@@ -275,7 +275,9 @@ impl Board {
             loop {
                 word.push(self.board[start_pos]);
                 if (start_pos >= 15 && self.board[start_pos-15] != EMPTY) || (start_pos < 210 && self.board[start_pos+15] != EMPTY) {
-                    words.push(self.scan_word(start_pos, Direction::Vertical));
+                    if pos_tiles.iter().any(|&(pos, _)| pos == start_pos) {
+                        words.push(self.scan_word(start_pos, Direction::Vertical));
+                    }
                 }
                 start_pos += 1;
                 if start_pos % 15 == 0 || self.board[start_pos] == EMPTY {
@@ -290,7 +292,9 @@ impl Board {
             loop {
                 word.push(self.board[start_pos]);
                 if (start_pos % 15 != 0 && self.board[start_pos-1] != EMPTY) || (start_pos % 15 != 14 && self.board[start_pos+1] != EMPTY) {
-                    words.push(self.scan_word(start_pos, Direction::Horizontal));
+                    if pos_tiles.iter().any(|&(pos, _)| pos == start_pos) {
+                        words.push(self.scan_word(start_pos, Direction::Horizontal));
+                    }
                 }
                 start_pos += 15;
                 if start_pos >= 225 || self.board[start_pos] == EMPTY {
