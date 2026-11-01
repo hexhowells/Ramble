@@ -37,4 +37,21 @@ impl Trie {
         }
         self.nodes[root].is_end = true;
     }
+
+
+    pub fn contains(&self, word: &[u8]) -> bool {
+        let mut root = self.root;
+
+        for &ch in word {
+            let child_idx = self.nodes[root].children[ch as usize];
+
+            if child_idx == None {
+                return false;
+            } else {
+                root = child_idx.unwrap();
+            }
+        }
+
+        self.nodes[root].is_end
+    }
 }
