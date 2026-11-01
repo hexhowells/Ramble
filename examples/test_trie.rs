@@ -7,8 +7,9 @@ use std::io::{BufRead, BufReader};
 
 fn main() {
     println!("Loading dictionary into Trie");
-    let _trie = load_dictionary("data/NWL2020.txt");
+    let trie = load_dictionary("data/CSW2019.txt");
     println!("Dictionary loaded!");
+    let binary = wincode::serialize(&trie).unwrap();
 }
 
 

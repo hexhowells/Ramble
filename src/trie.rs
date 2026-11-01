@@ -1,11 +1,18 @@
+use wincode::{SchemaWrite, SchemaRead, len::BincodeLen, containers};
+
+type MaxBytes = BincodeLen<260000000>;
+
 #[derive(Default)]
+#[derive(SchemaWrite, SchemaRead)]
 struct TrieNode {
     children: [Option<usize>; 26],
     is_end: bool,
 }
 
 #[derive(Default)]
+#[derive(SchemaWrite, SchemaRead)]
 pub struct Trie {
+    #[wincode(with = "containers::Vec<TrieNode, MaxBytes>")]
     nodes: Vec<TrieNode>,
     root: usize,
 }
