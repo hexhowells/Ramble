@@ -5,7 +5,7 @@ struct TrieNode {
 }
 
 #[derive(Default)]
-struct Trie {
+pub struct Trie {
     nodes: Vec<TrieNode>,
     root: usize,
 }
@@ -13,7 +13,7 @@ struct Trie {
 
 impl Trie {
     pub fn new() -> Self {
-        let mut trie = Self::default()
+        let mut trie = Self::default();
         trie.nodes.push(TrieNode::default());
         trie.root = 0;
         trie
