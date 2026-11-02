@@ -8,11 +8,11 @@ use std::io::{BufRead, BufReader};
 
 fn main() {
     println!("Loading dictionary into Trie");
-    let trie = load_dictionary("data/NWL2020.txt");
+    let trie = load_dictionary("data/txt/NWL2020.txt");
     println!("Dictionary loaded!");
     let binary = wincode::serialize(&trie).unwrap();
 
-    let mut file = match File::create("NWL2020.bin") {
+    let mut file = match File::create("data/bin/NWL2020.bin") {
         Ok(file) => file,
         Err(error) => {
             panic!("Problem creating file: {:?}", error);

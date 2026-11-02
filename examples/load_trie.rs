@@ -5,7 +5,7 @@ use std::fs;
 
 fn main() {
     println!("Loading dictionary binary into memory");
-    let binary = fs::read("dictionary.bin").expect("Could not open dictionary file");
+    let binary = fs::read("data/bin/NWL2020.bin").expect("Could not open dictionary file");
     println!("Dictionary loaded into memory!");
 
     let trie: Trie = wincode::deserialize(&binary).unwrap();
