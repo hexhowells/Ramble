@@ -2,14 +2,23 @@
 use ramble::trie::Trie;
 
 use std::fs::File;
+use std::io::Write;
 use std::io::{BufRead, BufReader};
 
 
 fn main() {
     println!("Loading dictionary into Trie");
-    let trie = load_dictionary("data/CSW2019.txt");
+    let trie = load_dictionary("data/NWL2020.txt");
     println!("Dictionary loaded!");
     let binary = wincode::serialize(&trie).unwrap();
+
+    let mut file = match File::create("NWL2020.bin") {
+        Ok(file) => file,
+        Err(error) => {
+            panic!("Problem creating file: {:?}", error);
+        }
+    };
+    let _ = file.write(&binary);
 }
 
 
