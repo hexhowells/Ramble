@@ -5,7 +5,7 @@ type MaxBytes = BincodeLen<260000000>;
 #[derive(Default)]
 #[derive(SchemaWrite, SchemaRead)]
 struct TrieNode {
-    children: [Option<usize>; 26],
+    children: [u32; 26],
     is_end: bool,
 }
 
@@ -31,15 +31,15 @@ impl Trie {
         let mut root = self.root;
 
         for ch in word {
-            let child_idx = self.nodes[root].children[ch as usize];
+            let child_idx = self.nodes[root].children[ch as usize] as usize;
             
-            if child_idx == None {
+            if child_idx == 0 {
                 let new_root = self.nodes.len();
                 self.nodes.push(TrieNode::default());
-                self.nodes[root].children[ch as usize] = Some(new_root);
+                self.nodes[root].children[ch as usize] = new_root as u32;
                 root = new_root;
             } else {
-                root = child_idx.unwrap();
+                root = child_idx;
             }
         }
         self.nodes[root].is_end = true;
@@ -50,12 +50,12 @@ impl Trie {
         let mut root = self.root;
 
         for &ch in word {
-            let child_idx = self.nodes[root].children[ch as usize];
+            let child_idx = self.nodes[root].children[ch as usize] as usize;
 
-            if child_idx == None {
+            if child_idx == 0 {
                 return false;
             } else {
-                root = child_idx.unwrap();
+                root = child_idx;
             }
         }
 
