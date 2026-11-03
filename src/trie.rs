@@ -1,4 +1,5 @@
 use wincode::{SchemaWrite, SchemaRead, len::BincodeLen, containers};
+use std::fs;
 
 type MaxBytes = BincodeLen<260000000>;
 
@@ -61,4 +62,16 @@ impl Trie {
 
         self.nodes[root].is_end
     }
+}
+
+
+pub fn load_dictionary(file_path: &str) -> Trie {
+    println!("Loading dictionary binary into memory");
+    let binary = fs::read(file_path).expect("Could not open dictionary file");
+    println!("Dictionary loaded into memory!");
+
+    let trie: Trie = wincode::deserialize(&binary).unwrap();
+    println!("Binary data deserialized into Trie!");
+
+    trie
 }
