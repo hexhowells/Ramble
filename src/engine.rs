@@ -1,5 +1,6 @@
 use bitvec::prelude::*;
 use rand::seq::IndexedRandom;
+use crate::trie::Trie;
 
 
 type BitField = BitArr!(for 100, in u64, Lsb0);
@@ -115,12 +116,13 @@ pub struct Board {
     p2_score: u16,
     bag: BitField,
     pub racks: [BitField; 2],
-    first_turn: bool
+    first_turn: bool,
+    dictionary: Trie,
 }
 
 
 impl Board {
-    pub fn new() -> Self {
+    pub fn new(dict: Trie) -> Self {
         Self {
             board: [EMPTY; 225],
             p1_score: 0,
@@ -128,6 +130,7 @@ impl Board {
             bag: bitarr![u64, Lsb0; 1; 100],
             racks: [bitarr![u64, Lsb0; 0; 100]; 2],
             first_turn: true,
+            dictionary: dict
         }
     }
 

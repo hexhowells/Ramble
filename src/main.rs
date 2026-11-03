@@ -1,16 +1,18 @@
 #![allow(dead_code)]
 mod engine;
+mod trie;
 
 use bitvec::prelude::*;
 use std::io::{self, Write};
 
 fn main() {
-    let mut board = engine::Board::new();
+    let dictionary = trie::load_dictionary("data/bin/NWL2020.bin");
+    let mut board = engine::Board::new(dictionary);
     
     board.draw(7, 0);
     board.draw(7, 1);
 
-    println!("Commands:");
+    println!("\nCommands:");
     println!("  exchange <player> <rack_idx1> <rack_idx2> ...");
     println!("  play <player> <board_pos>,<rack_idx> <board_pos>,<rack_idx> ...");
     println!("  quit\n");
