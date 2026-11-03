@@ -240,6 +240,11 @@ impl Board {
     }
 
 
+    fn all_words_valid(&self, words: &Vec<Vec<u8>>) -> bool {
+        words.iter().all(|word| self.dictionary.contains(word))
+    }
+
+
     fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
         if self.first_turn == true && self.board[112] == EMPTY {
             return false;
@@ -307,6 +312,10 @@ impl Board {
         }
 
         words.push(word);
+
+        if !self.all_words_valid(&words) {
+            return false;
+        }
 
         let is_connected = pos_tiles.iter().any(|&(pos, _)| {
             (pos >= 15 && self.board[pos-15] != EMPTY) ||
