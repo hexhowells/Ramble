@@ -147,9 +147,8 @@ impl Board {
 
 
     pub fn draw(&mut self, n: usize, player: usize) {
-        let set_indices: Vec<usize> = self.bag.iter()
-            .enumerate()
-            .filter_map(|(idx, bit)| (*bit).then_some(idx))
+        let set_indices: Vec<usize> = (0..100)
+            .filter(|&idx| self.bag[idx])
             .collect();
 
         let move_count = n.min(set_indices.len());
