@@ -246,10 +246,12 @@ impl Board {
 
     fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
         if self.first_turn == true && self.board[112] == EMPTY {
+            println!("[ERR] - First move not played in the center!");
             return false;
         }
 
         if pos_tiles.is_empty() {
+            println!("[ERR] - No tiles played!");
             return false;
         }
 
@@ -261,6 +263,7 @@ impl Board {
         let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
 
         if !same_row && !same_col {
+            println!("[ERR] - Tiles are not played in a line!");
             return false;
         }
         
@@ -271,6 +274,7 @@ impl Board {
         let step = if same_row {1} else {15};
 
         if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
+            println!("[ERR] - There are blank tiles between the tiles played!");
             return false;
         }
 
@@ -313,6 +317,7 @@ impl Board {
         words.push(word);
 
         if !self.all_words_valid(&words) {
+            println!("[ERR] - Not all words are valid!");
             return false;
         }
 
