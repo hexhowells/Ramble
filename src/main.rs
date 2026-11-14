@@ -14,7 +14,7 @@ fn main() {
 
     println!("\nCommands:");
     println!("  exchange <player> <rack_idx1> <rack_idx2> ...");
-    println!("  play <player> <board_pos>,<rack_idx> <board_pos>,<rack_idx> ...");
+    println!("  play <player> <loc> <word> (e.g., play 0 H8 GINGER for vertical, play 0 8H GINGER for horizontal)");
     println!("  quit\n");
 
     loop {
@@ -44,26 +44,17 @@ fn main() {
                     println!("Error: {}", e);
                 }
             }
-            "play" if parts.len() >= 3 => {
+            "play" if parts.len() == 4 => {
                 let player: usize = parts[1].parse().unwrap_or(0);
-                let mut mask = bitarr![u64, Lsb0; 0; 100];
-                let mut pos_tiles = Vec::new();
+                let location = parts[2];
+                let word = parts[3];
                 
-                for pair in &parts[2..] {
-                    let split: Vec<&str> = pair.split(',').collect();
-                    if split.len() == 2 {
-                        if let (Ok(pos), Ok(idx)) = (split[0].parse::<usize>(), split[1].parse::<usize>()) {
-                            mask.set(idx, true);
-                            pos_tiles.push((pos, idx));
-                        }
-                    }
-                }
-                
-                if let Err(e) = board.play(player, mask, &pos_tiles) {
+                if let Err(e) = board.play_notation(player, location, word) {
                     println!("Error: {}", e);
                 }
+                board.draw(7-board.racks[player].count_ones(), player);
             }
-            _ => println!("Invalid command syntax."),
+            _ => println!("Invalid command syntax. Use: play <player> <loc> <word>"),
         }
     }
 }

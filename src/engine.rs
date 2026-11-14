@@ -355,4 +355,93 @@ impl Board {
 
         true
     }
+
+
+    fn get_start_pos(&self, location: &str) -> Result<(bool, usize, usize), &'static str> {
+        let mut chars = location.chars().peekable();
+        if chars.peek().is_none() { 
+            return Err("Empty location"); 
+        }
+
+        let is_vertical: bool;
+        let row: usize;
+        let col: usize;
+
+        let first = *chars.peek().unwrap();
+        
+        if first.is_ascii_alphabetic() {
+            is_vertical = true;
+            col = (first.to_ascii_uppercase() as u8 - b'A') as usize;
+            
+            chars.next(); 
+            let num_str: String = chars.collect();
+            row = num_str.parse::<usize>().map_err(|_| "Invalid row")? - 1;
+        } else if first.is_ascii_digit() {
+            is_vertical = false;
+            let mut num_str = String::new();
+            
+            while let Some(&c) = chars.peek() {
+                if c.is_ascii_digit() {
+                    num_str.push(c);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            row = num_str.parse::<usize>().map_err(|_| "Invalid row")? - 1;
+            let letter = chars.next().ok_or("Missing col")?;
+            col = (letter.to_ascii_uppercase() as u8 - b'A') as usize;
+        } else {
+            return Err("Invalid location format");
+        }
+
+        return Ok((is_vertical, row, col));
+    }
+
+
+    pub fn play_notation(&mut self, player: usize, location: &str, word: &str) -> Result<(), &'static str> {
+        let (is_vertical, row, col) = self.get_start_pos(location)?;
+
+        if row > 14 || col > 14 { 
+            return Err("Location out of bounds"); 
+        }
+
+        let mut current_pos = row * 15 + col;
+        let step = if is_vertical { 15 } else { 1 };
+        
+        let mut mask = bitarr![u64, Lsb0; 0; 100];
+        let mut pos_tiles = Vec::new();
+        let rack = self.racks[player];
+
+        for ch in word.to_ascii_uppercase().chars() {
+            if current_pos >= 225 || (!is_vertical && current_pos / 15 != row) {
+                return Err("Word exceeds board boundaries");
+            }
+
+            let letter_val = ch as u8 - b'A';
+            
+            if self.board[current_pos] != EMPTY {
+                if self.board[current_pos] != letter_val {
+                    return Err("Word conflicts with existing tiles on board");
+                }
+            } else {
+                let mut found = false;
+                for idx in 0..100 {
+                    if rack[idx] && !mask[idx] && TILE_MAP[idx] == letter_val {
+                        mask.set(idx, true);
+                        pos_tiles.push((current_pos, idx));
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if !found {
+                    return Err("Required tile not found in rack");
+                }
+            }
+            current_pos += step;
+        }
+
+        self.play(player, mask, &pos_tiles)
+    }
 }
