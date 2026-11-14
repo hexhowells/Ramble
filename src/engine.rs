@@ -136,13 +136,33 @@ impl Board {
 
 
     pub fn state(&self) {
-        println!("\n--Board State--");
-        for row in self.board.chunks(15) {
-            println!("{:?}", row);
+        println!("\n    A B C D E F G H I J K L M N O");
+        println!("  +-------------------------------+");
+        for (i, row) in self.board.chunks(15).enumerate() {
+            let row_str: String = row.iter()
+                .map(|&x| match x {
+                    EMPTY => '.',
+                    26 => '*',
+                    _ => (x + b'A') as char,
+                })
+                .flat_map(|c| vec![' ', c])
+                .collect();
+            println!("{:2}|{}", i + 1, row_str);
         }
-        println!("bag\t {:b}", self.bag);
-        println!("p1 rack\t {:b}", self.racks[0]);
-        println!("p2 rack\t {:b}", self.racks[1]);
+        println!("  +-------------------------------+\n");
+        
+        for p in 0..2 {
+            let mut rack_str = String::new();
+            for idx in 0..100 {
+                if self.racks[p][idx] {
+                    let val = TILE_MAP[idx];
+                    let ch = if val == 26 { '*' } else { (val + b'A') as char };
+                    rack_str.push(ch);
+                    rack_str.push(' ');
+                }
+            }
+            println!("P{} Rack: {}", p + 1, rack_str.trim_end());
+        }
     }
 
 
