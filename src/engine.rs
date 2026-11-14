@@ -349,6 +349,7 @@ impl Board {
         });
 
         if !self.first_turn && !is_connected {
+            println!("[ERR] - Tiles are not connected to graph!");
             return false;
         }
 
