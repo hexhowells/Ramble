@@ -1,5 +1,5 @@
 # Ramble
-A Scrabble engine written in Rust.
+A Scrabble engine written in Rust. [WIP]
 
 ## Data
 Number of words in NWL2020: 172,820
