@@ -342,10 +342,10 @@ impl Board {
         }
 
         let is_connected = pos_tiles.iter().any(|&(pos, _)| {
-            (pos >= 15 && self.board[pos-15] != EMPTY) ||
-            (pos < 210 && self.board[pos+15] != EMPTY) ||
-            (pos % 15 != 0 && self.board[pos-1] != EMPTY) ||
-            (pos % 15 != 14 && self.board[pos+1] != EMPTY)
+            (pos >= 15 && self.board[pos-15] != EMPTY && pos_tiles.iter().all(|&(p, _)| p != pos-15)) ||
+            (pos < 210 && self.board[pos+15] != EMPTY && pos_tiles.iter().all(|&(p, _)| p != pos+15)) ||
+            (pos % 15 != 0 && self.board[pos-1] != EMPTY && pos_tiles.iter().all(|&(p, _)| p != pos-1)) ||
+            (pos % 15 != 14 && self.board[pos+1] != EMPTY && pos_tiles.iter().all(|&(p, _)| p != pos+1))
         });
 
         if !self.first_turn && !is_connected {
