@@ -38,7 +38,7 @@ pub const BOARD_MULTIPLIERS: [Multiplier; 225] = [
     N,  N,  N,  N,  DW, N,  N,  N,  N,  N,  DW, N,  N,  N,  N, 
     N,  TL, N,  N,  N,  TL, N,  N,  N,  TL, N,  N,  N,  TL, N, 
     N,  N,  DL, N,  N,  N,  DL, N,  DL, N,  N,  N,  DL, N,  N, 
-    TW, N,  N,  DL, N,  N,  N,  DL, N,  N,  N,  DL, N,  N,  TW,
+    TW, N,  N,  DL, N,  N,  N,  DW, N,  N,  N,  DL, N,  N,  TW,
     N,  N,  DL, N,  N,  N,  DL, N,  DL, N,  N,  N,  DL, N,  N, 
     N,  TL, N,  N,  N,  TL, N,  N,  N,  TL, N,  N,  N,  TL, N, 
     N,  N,  N,  N,  DW, N,  N,  N,  N,  N,  DW, N,  N,  N,  N, 
