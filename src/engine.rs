@@ -194,6 +194,34 @@ impl Board {
     }
 
 
+    fn compute_score(&self, word_positions: &Vec<Vec<usize>>) -> u8 {
+        let mut score = 0;
+        
+        for word_pos in word_positions {
+            let mut word_score = 0;
+            let mut word_mul = 1;
+
+            for tile_pos in word_pos {
+                let mut letter_score = TILE_SCORES[self.board[*tile_pos] as usize];
+
+                match BOARD_MULTIPLIERS[*tile_pos] {
+                    N => {},
+                    DL => letter_score *= 2,
+                    TL => letter_score *= 3,
+                    DW => word_mul *= 2,
+                    TW => word_mul *= 3,
+                }
+
+                word_score += letter_score;
+            }
+
+            score += word_score * word_mul;
+        }
+
+        score
+    }
+
+
     pub fn play(&mut self, player: usize, play_tiles: BitField, pos_tiles: &[(usize, usize)]) -> Result<(), &'static str> {
         if self.racks[player] & play_tiles == play_tiles {
             let board_copy = self.board;
@@ -222,8 +250,9 @@ impl Board {
     }
 
 
-    fn scan_word(&self, mut tile_pos: usize, direc: Direction) -> Vec<u8> {
+    fn scan_word(&self, mut tile_pos: usize, direc: Direction) -> (Vec<u8>, Vec<usize>) {
         let mut word: Vec<u8> = Vec::new();
+        let mut word_pos: Vec<usize> = Vec::new();
         
         match direc {
             Direction::Horizontal => {
@@ -233,6 +262,7 @@ impl Board {
 
                 loop {
                     word.push(self.board[tile_pos]);
+                    word_pos.push(tile_pos);
                     tile_pos += 1;
                     if tile_pos % 15 == 0 || self.board[tile_pos] == EMPTY {
                         break;
@@ -247,6 +277,7 @@ impl Board {
 
                 loop {
                     word.push(self.board[tile_pos]);
+                    word_pos.push(tile_pos);
                     tile_pos += 15;
                     if tile_pos >= 225 || self.board[tile_pos] == EMPTY {
                         break;
@@ -255,7 +286,7 @@ impl Board {
             }
         }
 
-        word
+        (word, word_pos)
     }
 
 
@@ -288,7 +319,10 @@ impl Board {
         }
         
         let mut words: Vec<Vec<u8>> = Vec::new();
+        let mut words_pos: Vec<Vec<usize>> = Vec::new();
         let mut word: Vec<u8> = Vec::new();
+        let mut word_pos: Vec<usize> = Vec::new();
+
         let mut start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
         let end_pos = pos_tiles.iter().map(|&(p, _)| p).max().unwrap();
         let step = if same_row {1} else {15};
@@ -305,9 +339,12 @@ impl Board {
 
             loop {
                 word.push(self.board[start_pos]);
+                word_pos.push(start_pos);
                 if (start_pos >= 15 && self.board[start_pos-15] != EMPTY) || (start_pos < 210 && self.board[start_pos+15] != EMPTY) {
                     if pos_tiles.iter().any(|&(pos, _)| pos == start_pos) {
-                        words.push(self.scan_word(start_pos, Direction::Vertical));
+                        let (adj_word, adj_word_pos) = self.scan_word(start_pos, Direction::Vertical);
+                        words.push(adj_word);
+                        words_pos.push(adj_word_pos);
                     }
                 }
                 start_pos += 1;
@@ -322,9 +359,12 @@ impl Board {
 
             loop {
                 word.push(self.board[start_pos]);
+                word_pos.push(start_pos);
                 if (start_pos % 15 != 0 && self.board[start_pos-1] != EMPTY) || (start_pos % 15 != 14 && self.board[start_pos+1] != EMPTY) {
                     if pos_tiles.iter().any(|&(pos, _)| pos == start_pos) {
-                        words.push(self.scan_word(start_pos, Direction::Horizontal));
+                        let (adj_word, adj_word_pos) = self.scan_word(start_pos, Direction::Horizontal);
+                        words.push(adj_word);
+                        words_pos.push(adj_word_pos);
                     }
                 }
                 start_pos += 15;
@@ -335,6 +375,7 @@ impl Board {
         }
 
         words.push(word);
+        words_pos.push(word_pos);
 
         if !self.all_words_valid(&words) {
             println!("[ERR] - Not all words are valid!");
@@ -352,6 +393,8 @@ impl Board {
             println!("[ERR] - Tiles are not connected to graph!");
             return false;
         }
+
+        println!("play score: {}", self.compute_score(&words_pos));
 
         true
     }
