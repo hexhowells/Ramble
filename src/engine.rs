@@ -229,18 +229,21 @@ impl Board {
                 self.board[tile_pos] = tile_val;
             }
 
-            let valid = self.validate(pos_tiles);
-
-            if valid == true {
-                self.racks[player] ^= play_tiles;
-                if self.first_turn == true {
+            match self.validate(pos_tiles) {
+                Ok(words_pos) => {
+                    self.racks[player] ^= play_tiles;
+                    
+                    let score = self.compute_score(&words_pos);
+                    self.scores[player] += score as u16;
+                    
                     self.first_turn = false;
+                    
+                    Ok(())
                 }
-                Ok(())
-            }
-            else {
-                self.board = board_copy;
-                Err("Board validation failed")
+                Err(err) => {
+                    self.board = board_copy;
+                    Err(err)
+                }
             }
         } else {
             Err("Invalid play mask")
@@ -348,15 +351,13 @@ impl Board {
     }
 
 
-    fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
+    fn validate(&self, pos_tiles: &[(usize, usize)]) -> Result<Vec<Vec<usize>>, &'static str> {
         if self.first_turn == true && self.board[112] == EMPTY {
-            println!("[ERR] - First move not played in the center!");
-            return false;
+            return Err("[ERR] - First move not played in the center!");
         }
 
         if pos_tiles.is_empty() {
-            println!("[ERR] - No tiles played!");
-            return false;
+            return Err("[ERR] - No tiles played!");
         }
 
         let first_pos = pos_tiles[0].0;
@@ -367,8 +368,7 @@ impl Board {
         let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
 
         if !same_row && !same_col {
-            println!("[ERR] - Tiles are not played in a line!");
-            return false;
+            return Err("[ERR] - Tiles are not played in a line!");
         }
 
         let start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
@@ -376,15 +376,13 @@ impl Board {
         let step = if same_row {1} else {15};
 
         if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
-            println!("[ERR] - There are blank tiles between the tiles played!");
-            return false;
+            return Err("[ERR] - There are blank tiles between the tiles played!");
         }
 
         let (words, words_pos) = self.get_all_new_words(pos_tiles, start_pos, same_row);
 
         if !self.all_words_valid(&words) {
-            println!("[ERR] - Not all words are valid!");
-            return false;
+            return Err("[ERR] - Not all words are valid!");
         }
 
         let is_connected = pos_tiles.iter().any(|&(pos, _)| {
@@ -395,13 +393,12 @@ impl Board {
         });
 
         if !self.first_turn && !is_connected {
-            println!("[ERR] - Tiles are not connected to graph!");
-            return false;
+            return Err("[ERR] - Tiles are not connected to graph!");
         }
 
         //self.scores[player as usize] += self.compute_score(&words_pos);
 
-        true
+        Ok(words_pos)
     }
 
 
