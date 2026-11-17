@@ -344,8 +344,10 @@ impl Board {
             }
         }
 
-        words.push(word);
-        words_pos.push(word_pos);
+        if word.len() > 1 {
+            words.push(word);
+            words_pos.push(word_pos);
+        }
 
         (words, words_pos)
     }
@@ -353,11 +355,11 @@ impl Board {
 
     fn validate(&self, pos_tiles: &[(usize, usize)]) -> Result<Vec<Vec<usize>>, &'static str> {
         if self.first_turn == true && self.board[112] == EMPTY {
-            return Err("[ERR] - First move not played in the center!");
+            return Err("First move not played in the center!");
         }
 
         if pos_tiles.is_empty() {
-            return Err("[ERR] - No tiles played!");
+            return Err("No tiles played!");
         }
 
         let first_pos = pos_tiles[0].0;
@@ -368,7 +370,7 @@ impl Board {
         let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
 
         if !same_row && !same_col {
-            return Err("[ERR] - Tiles are not played in a line!");
+            return Err("Tiles are not played in a line!");
         }
 
         let start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
@@ -376,13 +378,17 @@ impl Board {
         let step = if same_row {1} else {15};
 
         if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
-            return Err("[ERR] - There are blank tiles between the tiles played!");
+            return Err("There are blank tiles between the tiles played!");
         }
 
         let (words, words_pos) = self.get_all_new_words(pos_tiles, start_pos, same_row);
 
+        if words.is_empty() {
+            return Err("Move must form at least one word of 2 or more letters!");
+        }
+
         if !self.all_words_valid(&words) {
-            return Err("[ERR] - Not all words are valid!");
+            return Err("Not all words are valid!");
         }
 
         let is_connected = pos_tiles.iter().any(|&(pos, _)| {
@@ -393,7 +399,7 @@ impl Board {
         });
 
         if !self.first_turn && !is_connected {
-            return Err("[ERR] - Tiles are not connected to graph!");
+            return Err("Tiles are not connected to graph!");
         }
 
         //self.scores[player as usize] += self.compute_score(&words_pos);
