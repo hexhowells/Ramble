@@ -112,8 +112,7 @@ pub const TILE_MAP: [u8; 100] = [
 
 pub struct Board {
     board: [u8; 225],
-    p1_score: u16,
-    p2_score: u16,
+    scores: [u16; 2],
     bag: BitField,
     pub racks: [BitField; 2],
     first_turn: bool,
@@ -125,8 +124,7 @@ impl Board {
     pub fn new(dict: Trie) -> Self {
         Self {
             board: [EMPTY; 225],
-            p1_score: 0,
-            p2_score: 0,
+            scores: [0; 2],
             bag: bitarr![u64, Lsb0; 1; 100],
             racks: [bitarr![u64, Lsb0; 0; 100]; 2],
             first_turn: true,
@@ -161,7 +159,7 @@ impl Board {
                     rack_str.push(' ');
                 }
             }
-            println!("P{} Rack: {}", p + 1, rack_str.trim_end());
+            println!("[P{}] Score: {} | Rack: {}", p + 1, self.scores[p], rack_str.trim_end());
         }
     }
 
@@ -401,7 +399,7 @@ impl Board {
             return false;
         }
 
-        println!("play score: {}", self.compute_score(&words_pos));
+        //self.scores[player as usize] += self.compute_score(&words_pos);
 
         true
     }
