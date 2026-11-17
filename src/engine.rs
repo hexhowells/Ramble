@@ -295,42 +295,11 @@ impl Board {
     }
 
 
-    fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
-        if self.first_turn == true && self.board[112] == EMPTY {
-            println!("[ERR] - First move not played in the center!");
-            return false;
-        }
-
-        if pos_tiles.is_empty() {
-            println!("[ERR] - No tiles played!");
-            return false;
-        }
-
-        let first_pos = pos_tiles[0].0;
-        let target_row = first_pos / 15;
-        let target_col = first_pos % 15;
-
-        let same_row = pos_tiles.iter().all(|&(pos, _)| pos / 15 == target_row);
-        let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
-
-        if !same_row && !same_col {
-            println!("[ERR] - Tiles are not played in a line!");
-            return false;
-        }
-        
+    fn get_all_new_words(&self, pos_tiles: &[(usize, usize)], mut start_pos: usize, same_row: bool) -> (Vec<Vec<u8>>, Vec<Vec<usize>>) {
         let mut words: Vec<Vec<u8>> = Vec::new();
         let mut words_pos: Vec<Vec<usize>> = Vec::new();
         let mut word: Vec<u8> = Vec::new();
         let mut word_pos: Vec<usize> = Vec::new();
-
-        let mut start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
-        let end_pos = pos_tiles.iter().map(|&(p, _)| p).max().unwrap();
-        let step = if same_row {1} else {15};
-
-        if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
-            println!("[ERR] - There are blank tiles between the tiles played!");
-            return false;
-        }
 
         if same_row {
             while start_pos % 15 != 0 && self.board[start_pos-1] != EMPTY {
@@ -352,7 +321,7 @@ impl Board {
                     break;
                 }
             }
-        } else if same_col {
+        } else {
             while start_pos > 14 && self.board[start_pos-15] != EMPTY {
                 start_pos -= 15;
             }
@@ -376,6 +345,44 @@ impl Board {
 
         words.push(word);
         words_pos.push(word_pos);
+
+        (words, words_pos)
+    }
+
+
+    fn validate(&self, pos_tiles: &[(usize, usize)]) -> bool {
+        if self.first_turn == true && self.board[112] == EMPTY {
+            println!("[ERR] - First move not played in the center!");
+            return false;
+        }
+
+        if pos_tiles.is_empty() {
+            println!("[ERR] - No tiles played!");
+            return false;
+        }
+
+        let first_pos = pos_tiles[0].0;
+        let target_row = first_pos / 15;
+        let target_col = first_pos % 15;
+
+        let same_row = pos_tiles.iter().all(|&(pos, _)| pos / 15 == target_row);
+        let same_col = pos_tiles.iter().all(|&(pos, _)| pos % 15 == target_col);
+
+        if !same_row && !same_col {
+            println!("[ERR] - Tiles are not played in a line!");
+            return false;
+        }
+
+        let start_pos = pos_tiles.iter().map(|&(p, _)| p).min().unwrap();
+        let end_pos = pos_tiles.iter().map(|&(p, _)| p).max().unwrap();
+        let step = if same_row {1} else {15};
+
+        if (start_pos..end_pos).step_by(step).any(|p| self.board[p] == EMPTY) {
+            println!("[ERR] - There are blank tiles between the tiles played!");
+            return false;
+        }
+
+        let (words, words_pos) = self.get_all_new_words(pos_tiles, start_pos, same_row);
 
         if !self.all_words_valid(&words) {
             println!("[ERR] - Not all words are valid!");
