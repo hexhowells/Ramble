@@ -480,9 +480,17 @@ impl Board {
         let mut pos_tiles = Vec::new();
         let rack = self.racks[player];
 
+        let mut blank_tiles = [BLANK; 2];
+        let mut next_tile_blank = false;
+
         for ch in word.to_ascii_uppercase().chars() {
             if current_pos >= 225 || (!is_vertical && current_pos / 15 != row) {
                 return Err("Word exceeds board boundaries");
+            }
+
+            if ch == '*' {
+                next_tile_blank = true;
+                continue;
             }
 
             let letter_val = ch as u8 - b'A';
@@ -492,15 +500,31 @@ impl Board {
                     return Err("Word conflicts with existing tiles on board");
                 }
             } else {
+                if next_tile_blank {
+                    if rack[98] && blank_tiles[0] == BLANK {
+                        blank_tiles[0] = current_pos;
+                        mask.set(98, true);
+                    } else if  rack[99] && blank_tiles[1] == BLANK {
+                        mask.set(99, true);
+                        blank_tiles[1] = current_pos;
+                    } else {
+                        return Err("Blank tile in use or not found in rack");
+                    }
+                }
+
                 let mut found = false;
                 for idx in 0..100 {
-                    if rack[idx] && !mask[idx] && TILE_MAP[idx] == letter_val {
-                        mask.set(idx, true);
+                    if (rack[idx] || next_tile_blank) && !mask[idx] && TILE_MAP[idx] == letter_val {
+                        if !next_tile_blank {
+                            mask.set(idx, true);
+                        }
                         pos_tiles.push((current_pos, idx));
                         found = true;
                         break;
                     }
                 }
+
+                next_tile_blank = false;
                 
                 if !found {
                     return Err("Required tile not found in rack");
@@ -509,6 +533,6 @@ impl Board {
             current_pos += step;
         }
 
-        self.play(player, mask, &pos_tiles, &[BLANK, BLANK])
+        self.play(player, mask, &pos_tiles, &blank_tiles)
     }
 }
