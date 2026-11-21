@@ -418,8 +418,6 @@ impl Board {
             return Err("Tiles are not connected to graph!");
         }
 
-        //self.scores[player as usize] += self.compute_score(&words_pos);
-
         Ok(words_pos)
     }
 
