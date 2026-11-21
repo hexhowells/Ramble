@@ -15,6 +15,7 @@ fn main() {
     println!("\nCommands:");
     println!("  exchange <player> <rack_idx1> <rack_idx2> ...");
     println!("  play <player> <loc> <word> (e.g., play 0 H8 GINGER for vertical, play 0 8H GINGER for horizontal)");
+    println!("  play blank tiles by preceding the chosen tile with * (e.g. play 0 H8 GING*ER - to use the blank tile as E)");
     println!("  quit\n");
 
     loop {
