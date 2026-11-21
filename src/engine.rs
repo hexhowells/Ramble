@@ -28,6 +28,7 @@ const DW: Multiplier = Multiplier::DoubleWord;
 const TW: Multiplier = Multiplier::TripleWord;
 
 const EMPTY: u8 = 27;
+const BLANK: usize = 225;
 
 
 pub const BOARD_MULTIPLIERS: [Multiplier; 225] = [
@@ -112,6 +113,7 @@ pub const TILE_MAP: [u8; 100] = [
 
 pub struct Board {
     board: [u8; 225],
+    blank_tiles: [usize; 2],
     scores: [u16; 2],
     bag: BitField,
     pub racks: [BitField; 2],
@@ -124,6 +126,7 @@ impl Board {
     pub fn new(dict: Trie) -> Self {
         Self {
             board: [EMPTY; 225],
+            blank_tiles: [BLANK; 2],
             scores: [0; 2],
             bag: bitarr![u64, Lsb0; 1; 100],
             racks: [bitarr![u64, Lsb0; 0; 100]; 2],
@@ -200,6 +203,10 @@ impl Board {
             let mut word_mul = 1;
 
             for tile_pos in word_pos {
+                if self.blank_tiles.contains(tile_pos) {
+                   continue; 
+                }
+
                 let mut letter_score = TILE_SCORES[self.board[*tile_pos] as usize];
 
                 match BOARD_MULTIPLIERS[*tile_pos] {
@@ -220,7 +227,7 @@ impl Board {
     }
 
 
-    pub fn play(&mut self, player: usize, play_tiles: BitField, pos_tiles: &[(usize, usize)]) -> Result<(), &'static str> {
+    pub fn play(&mut self, player: usize, play_tiles: BitField, pos_tiles: &[(usize, usize)], blank_tiles: &[usize; 2]) -> Result<(), &'static str> {
         if self.racks[player] & play_tiles == play_tiles {
             let board_copy = self.board;
 
@@ -232,6 +239,15 @@ impl Board {
             match self.validate(pos_tiles) {
                 Ok(words_pos) => {
                     self.racks[player] ^= play_tiles;
+
+                    for i in 0..2 {
+                        if blank_tiles[i] != BLANK {
+                            if self.blank_tiles[i] != BLANK {
+                                return Err("Blank tile already used");
+                            }
+                            self.blank_tiles[i] = blank_tiles[i];
+                        }
+                    }
                     
                     let score = self.compute_score(&words_pos);
                     self.scores[player] += score as u16;
@@ -493,6 +509,6 @@ impl Board {
             current_pos += step;
         }
 
-        self.play(player, mask, &pos_tiles)
+        self.play(player, mask, &pos_tiles, &[BLANK, BLANK])
     }
 }
