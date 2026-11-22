@@ -19,6 +19,9 @@ The below command plays the word "ramble" for the first player (0) starting at t
 
 `play 0 8H RAMBLE`
 
+### Blank tiles
+Blank tiles are represented in the player's rack as an `*` symbol. You can play the blank tile by using the `*` symbol, followed by the letter you want the blank tile to represent.
+
 ## Data
 Number of words in NWL2020: 172,820
 
