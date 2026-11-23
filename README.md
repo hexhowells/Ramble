@@ -22,6 +22,11 @@ The below command plays the word "ramble" for the first player (0) starting at t
 ### Blank tiles
 Blank tiles are represented in the player's rack as an `*` symbol. You can play the blank tile by using the `*` symbol, followed by the letter you want the blank tile to represent.
 
+## Exchange tiles
+You can exchange tiles for a player using the `exchange` command. This command takes the user index and a space separated list of tiles to exchange. The following exchanges the tiles [G, A, H] from the first player (0):
+
+`exchange 0 G A H`
+
 ## Data
 Number of words in NWL2020: 172,820
 
