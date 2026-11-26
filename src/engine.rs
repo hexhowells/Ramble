@@ -464,6 +464,22 @@ impl Board {
     }
 
 
+    pub fn get_tile_index(&self, player: usize, tile: char, exclude: &BitArr!(for 100, in u64, Lsb0)) -> Result<usize, &'static str> {
+        let letter_val = match tile {
+            'A'..='Z' | 'a'..='z' => tile.to_ascii_uppercase() as u8 - b'A',
+            '*' => 26,
+            _ => return Err("Invalid tile character."),
+        };
+
+        let available = self.racks[player] & !*exclude;
+
+        available
+            .iter_ones()
+            .find(|&idx| TILE_MAP[idx] == letter_val)
+            .ok_or("Tile not found in rack")
+    }
+
+
     pub fn play_notation(&mut self, player: usize, location: &str, word: &str) -> Result<(), &'static str> {
         let (is_vertical, row, col) = self.get_start_pos(location)?;
 

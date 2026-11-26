@@ -33,15 +33,18 @@ fn main() {
             "quit" => break,
             "exchange" if parts.len() >= 2 => {
                 let player: usize = parts[1].parse().unwrap_or(0);
-                let mut mask = bitarr![u64, Lsb0; 0; 100];
-                
-                for idx_str in &parts[2..] {
-                    if let Ok(idx) = idx_str.parse::<usize>() {
+
+                let result = parts[2..]
+                    .iter()
+                    .try_fold(bitarr![u64, Lsb0; 0; 100], |mut mask, s| {
+                        let tile = s.parse::<char>().map_err(|_| "Expected single character")?;
+                        let idx = board.get_tile_index(player, tile, &mask)?;
                         mask.set(idx, true);
-                    }
-                }
+                        Ok(mask)
+                    })
+                    .and_then(|mask| board.exchange(player, mask));
                 
-                if let Err(e) = board.exchange(player, mask) {
+                if let Err(e) = result {
                     println!("Error: {}", e);
                 }
             }
